@@ -1,0 +1,3 @@
+# Will contain - state function, creates dynamo db table, lambda function to store the status in the dynamo db table and tags the resources.
+# Resources: Dynamodb table, A lambda function, State machine
+# Step function will create an EMR cluster

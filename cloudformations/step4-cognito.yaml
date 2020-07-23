@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Cognito setup"
+Parameters:
+  paramCognitoUserPoolName:
+    Type: String
+    Description: Cognito User Name.
+  paramResouceIdentifier:
+    Type: String
+    Description: Cognito User Name.
+    AllowedValues: ["myspringboot-ApiUserPoolResourceServer"]
+  paramResouceScopeName:
+    Type: String
+    Description: Cognito User Name.
+    AllowedValues: ["myspringboot-AdhocRequestsScope"]
+
+Resources:
+  ApiUserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      UserPoolName: !Ref paramCognitoUserPoolName
+
+  ApiUserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    DependsOn: ApiUserPoolResourceServer
+    Properties:
+      ClientName: "myspringboot-ApiUserPoolClient"
+      RefreshTokenValidity: "3650"
+      GenerateSecret: true
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      UserPoolId: !Ref ApiUserPool
+      PreventUserExistenceErrors: ENABLED
+      AllowedOAuthFlows:
+        - client_credentials
+      AllowedOAuthScopes:
+        - "myspringboot-ApiUserPoolResourceServer/myspringboot-AdhocRequestsScope"
+
+  ApiUserPoolDomain:
+    Type: "AWS::Cognito::UserPoolDomain"
+    DependsOn: ApiUserPool
+    Properties:
+      Domain: "myspringboot-apiuserpooldomain"
+      UserPoolId: !Ref ApiUserPool
+
+  ApiUserPoolResourceServer:
+      Type: "AWS::Cognito::UserPoolResourceServer"
+      DependsOn: ApiUserPoolDomain
+      Properties:
+        Identifier: !Ref paramResouceIdentifier
+        Name: "myspringboot-ApiUserPoolResourceServer"
+        UserPoolId: !Ref ApiUserPool
+        Scopes:
+          - ScopeName: !Ref paramResouceScopeName
+            ScopeDescription: "myspringboot-AdhocRequestsScope"
+
+  UserPoolParameterStore:
+    Type: AWS::SSM::Parameter
+    DependsOn: ApiUserPoolClient
+    Properties:
+      Description: "Cognito User Pool Information"
+      Name: !Ref ApiUserPoolClient
+      Type: String
+      Value: !Ref paramCognitoUserPoolName
+
+Outputs:
+  UserPoolName:
+    Description: "Name of the Cognito user pool"
+    Value: !Ref ApiUserPool
+    Export:
+      Name: "myspringboot-UserPoolName"
+
+  UserPoolId:
+    Description: "Id of api user pool"
+    Value: !Ref ApiUserPool
+    Export:
+      Name: "myspringboot-UserPoolId"
+
+  UserPoolClientId:
+    Description: "Id of api user pool client"
+    Value: !Ref ApiUserPoolClient
+    Export:
+      Name: "myspringboot-UserPoolClientId"
+
+  UserPoolEndpoint:
+    Description: "UserPool Endpoint"
+    Value: !GetAtt ApiUserPool.ProviderURL
+    Export:
+      Name: "myspringboot-UserPoolEndpoint"
+
+  UserPoolArn:
+    Description: The node instance role
+    Value: !GetAtt ApiUserPool.Arn
+    Export:
+      Name: "EnterpriseCognitoUserPoolArn"
+
+  ResourceIdentifier:
+    Description: "Resouce Identifier"
+    Value:
+      Fn::Join:
+          - ''
+          - - Ref: paramResouceIdentifier
+            - '/'
+            - Ref: paramResouceScopeName
+    Export:
+      Name: "Cognito-resouce-identifier-scope"
+

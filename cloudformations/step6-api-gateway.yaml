@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "API Gateway and Lambda function"
+Parameters:
+  ApiGatewayStageName:
+    Type: "String"
+    AllowedPattern: "^[a-z0-9]+$"
+    Default: "dev"
+
+  StartAnalyticsJobApiPathPart:
+    Type: "String"
+    Default: "startAnalyticsJob"
+    AllowedValues: ["startAnalyticsJob"]
+
+Resources:
+  ApiGatewayExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'apigateway.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: LambdaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'apigateway:*'
+                  - 'lambda:*'
+                  - 'cognito:*'
+                Resource: '*'
+
+  StartAnalyticsJobApiGateway:
+    Type: "AWS::ApiGateway::RestApi"
+    Properties:
+      Name: "StartAnalyticsJob"
+      Description: "StartAnalyticsJob"
+
+  StartAnalyticsJobResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: StartAnalyticsJobApiGateway
+    Properties:
+        RestApiId: !Ref StartAnalyticsJobApiGateway
+        ParentId: !GetAtt StartAnalyticsJobApiGateway.RootResourceId
+        PathPart: startAnalyticsJob
+
+  StartAnalyticsJobApiMethod:
+      Type: "AWS::ApiGateway::Method"
+      DependsOn: StartAnalyticsJobResource
+      Properties:
+        ApiKeyRequired: false
+        AuthorizationType: COGNITO_USER_POOLS
+        AuthorizationScopes:
+          - Fn::ImportValue: "Cognito-resouce-identifier-scope"
+        AuthorizerId:
+          Ref: StartAnalyticsApiAuthorizer
+        HttpMethod: "POST"
+        MethodResponses:
+          - StatusCode: 200
+        Integration:
+          IntegrationResponses:
+            - StatusCode: 200
+          IntegrationHttpMethod: "POST"
+          PassthroughBehavior: WHEN_NO_TEMPLATES
+          RequestTemplates:
+            application/json: "#set($allParams = $input.params())\n{\n\"body-json\"\
+                        \ : $input.json('$'),\n\"params\" : {\n#foreach($type in $allParams.keySet())\n\
+                        \    #set($params = $allParams.get($type))\n\"$type\" : {\n    #foreach($paramName\
+                        \ in $params.keySet())\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\
+                        \n        #if($foreach.hasNext),#end\n    #end\n}\n    #if($foreach.hasNext),#end\n\
+                        #end\n},\n\"stage-variables\" : {\n#foreach($key in $stageVariables.keySet())\n\
+                        \"$key\" : \"$util.escapeJavaScript($stageVariables.get($key))\"\n   \
+                        \ #if($foreach.hasNext),#end\n#end\n},\n\"context\" : {\n    \"api-id\"\
+                        \ : \"$context.apiId\",\n    \"cognito-identity-id\" : \"$context.authorizer.claims.sub\"\
+                        ,\n    \"http-method\" : \"$context.httpMethod\",\n    \"stage\" : \"\
+                        $context.stage\",\n    \"source-ip\" : \"$context.identity.sourceIp\"\
+                        ,\n    \"user-agent\" : \"$context.identity.userAgent\",\n    \"user-arn\"\
+                        \ : \"$context.identity.userArn\",\n    \"request-id\" : \"$context.requestId\"\
+                        ,\n    \"resource-id\" : \"$context.resourceId\",\n    \"resource-path\"\
+                        \ : \"$context.resourcePath\",\n    \"cognito-app-client-id\": \"$context.authorizer.claims.sub\"\
+                        ,\n    \"cognito-pool-id\": \"$context.authorizer.claims.iss\"\n    }\n\
+                        }"
+          Type: "AWS"
+          #Credentials: !GetAtt ApiGatewayExecutionRole.Arn
+          Uri:
+            Fn::Join:
+              - ''
+              - - 'arn:aws:apigateway:'
+                - Ref: AWS::Region
+                - ':lambda:path/2015-03-31/functions/'
+                - Fn::ImportValue: "StartAnalyticsJobLambdaArn"
+                - '/invocations'
+        ResourceId: !Ref StartAnalyticsJobResource
+        RestApiId: !Ref StartAnalyticsJobApiGateway
+
+  StartAnalyticsJobApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: StartAnalyticsJobApiMethod
+    Properties:
+      Description: Lambda API Deployment
+      RestApiId: !Ref StartAnalyticsJobApiGateway
+
+  StartAnalyticsJobApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+        DeploymentId: !Ref StartAnalyticsJobApiDeployment
+        Description: Lambda API Stage V0
+        RestApiId: !Ref StartAnalyticsJobApiGateway
+        StageName: {'Ref': ApiGatewayStageName}
+
+  StartAnalyticsApiAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    DependsOn: ApiGatewayExecutionRole
+    Properties:
+      Name: StartAnalyticsJobApiAuthorizer
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+        - Fn::ImportValue: "EnterpriseCognitoUserPoolArn"
+      RestApiId: !Ref StartAnalyticsJobApiGateway
+      IdentitySource: 'method.request.header.Authorization'
+      AuthorizerCredentials: !GetAtt ApiGatewayExecutionRole.Arn
+      AuthorizerResultTtlInSeconds: 0
+
+  LambdaApiGatewayInvoke:
+      Type: "AWS::Lambda::Permission"
+      Description: "Lambda test"
+      Properties:
+        Action: "lambda:InvokeFunction"
+        #FunctionName: "arn:aws:lambda:us-east-1:246997141225:function:makeshift-aws-blog-invoke-step-functions-lambda"
+        #FunctionName: !Join
+        #  - ''
+        #  - - Fn::ImportValue: "StartAnalyticsJobLambdaArn"
+        FunctionName:
+          Fn::Join:
+              - ''
+              - - Fn::ImportValue: "StartAnalyticsJobLambdaArn"
+        Principal: "apigateway.amazonaws.com"
+        SourceArn:
+          Fn::Join:
+            - ''
+            - - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${StartAnalyticsJobApiGateway}/*/POST/"
+              - {'Ref': StartAnalyticsJobApiPathPart}
+Outputs:
+  ApiGatewayExecutionRole:
+    Description: The node instance role
+    Value: !GetAtt ApiGatewayExecutionRole.Arn
+    Export:
+      #Name: !Sub "${AWS::StackName}-EKSClusterRole"
+      Name: "ApiGatewayExecutionRole"

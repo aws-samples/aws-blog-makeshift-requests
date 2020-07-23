@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Lambda function to invoke the step functions."
+Parameters:
+  paramLambdaFunctionName:
+    Type: "String"
+    AllowedPattern: "^[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+$"
+    AllowedValues: ["makeshift-aws-blog-invoke-step-functions-lambda"]
+
+Resources:
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "makeshift-aws-blog-iam-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Effect: "Allow"
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${paramLambdaFunctionName}:*"
+          PolicyName: "makeshift-aws-blog-iam-policy"
+
+  #LambdaLogGroup:
+  #    Type: "AWS::Logs::LogGroup"
+  ##    Properties:
+  #      LogGroupName: !Sub "/aws/lambda/${paramLambdaFunctionName}"
+  #      RetentionInDays: 90
+
+  StartAnalyticsJobLambda:
+    Type: "AWS::Lambda::Function"
+    DependsOn: LambdaExecutionRole
+    Properties:
+      FunctionName: !Ref "paramLambdaFunctionName"
+      Code:
+        S3Bucket: "skkodali-proserve"
+        S3Key: "makeshift-requests/cloudformations/target/makeshift-lambdas.jar"
+      Description: "Invoke Step Functions."
+      Handler: "com.dataanalytics.awsblogs.InvokeStepFunctionsLambda::handleRequest"
+      MemorySize: 256
+      Role: !GetAtt "LambdaExecutionRole.Arn"
+      Runtime: "java8"
+      Timeout: 300
+
+Outputs:
+  StartAnalyticsJobLambdaArn:
+    Description: "The Invoke Step Functions Lambda Arn"
+    Value: !GetAtt StartAnalyticsJobLambda.Arn
+    Export:
+      Name: "StartAnalyticsJobLambdaArn"
+
+  StartAnalyticsJobLambdaName:
+    Description: "The Invoke Step Functions Lambda Arn"
+    Value: !Ref StartAnalyticsJobLambda
+    Export:
+      Name: "StartAnalyticsJobLambdaName"
+
+  LambdaExecutionRoleArn:
+    Description: "The Lambda execution role Arn"
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+        Name: "LambdaExecutionRoleArn"

@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template creates an Amazon VPC and subnet with the required configuration for a cross-realm trust.
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: ADHOCVPC
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref 'VPC'
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: 'True'
+      Tags:
+        - Key: Name
+          Value: ADHOCVPCSubnetA
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref 'VPC'
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: 'True'
+      Tags:
+        - Key: Name
+          Value: ADHOCVPCSubnetB
+
+  PublicSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref 'VPC'
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: 'True'
+      Tags:
+        - Key: Name
+          Value: ADHOCVPCSubnetC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: ADHOCVPCGateway
+  MyGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref 'InternetGateway'
+      VpcId: !Ref 'VPC'
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref 'InternetGateway'
+    DependsOn:
+      - MyGatewayAttachment
+  PublicSubnetRouteAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnetA'
+  PublicSubnetRouteAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnetB'
+  PublicSubnetRouteAssociationC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnetC'
+
+  AdhocAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: CloudFormationGroup
+      VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+        - IpProtocol: '-1'
+          CidrIp: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: ADHOCVPCMasterSecurityGroup
+  VPCDefaultSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt 'VPC.DefaultSecurityGroup'
+      IpProtocol: '-1'
+      CidrIp: 10.0.0.0/16
+Outputs:
+  StackName:
+    Value: !Ref 'AWS::StackName'
+  SubnetIDA:
+    Description: Public Subnet A.
+    Value: !Ref 'PublicSubnetA'
+    Export:
+      Name: "public-subnet-a"
+  SubnetIDB:
+    Description: Public Subnet B.
+    Value: !Ref 'PublicSubnetB'
+    Export:
+      Name: "public-subnet-b"
+  SubnetIDC:
+    Description: Public Subnet C.
+    Value: !Ref 'PublicSubnetC'
+    Export:
+      Name: "public-subnet-c"
+  AdhocAccessSecurityGroup:
+    Description: Use this security group ID for the these blog services.
+    Value: !GetAtt 'AdhocAccessSecurityGroup.GroupId'
+    Export:
+      Name: "adhoc-securitygroup-id"
+  VPCID:
+    Description: Use this VPC ID for all your services that are created in this blog.
+    Value: !Ref 'VPC'
+    Export:
+      Name: "adhoc-vpc-id"
