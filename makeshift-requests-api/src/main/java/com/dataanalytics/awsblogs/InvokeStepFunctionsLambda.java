@@ -6,6 +6,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsAsyncClientBuilder;
+import com.amazonaws.services.stepfunctions.builder.StateMachine;
+import com.amazonaws.services.stepfunctions.builder.StepFunctionBuilder;
+import com.amazonaws.services.stepfunctions.model.StartExecutionRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -28,15 +31,24 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
             HashMap event = gson.fromJson(reader, HashMap.class);
             //logger.log("event data: " + gson.toJson(event));
             JsonObject contextObject = gson.fromJson(gson.toJson(event.get("context")), JsonObject.class);
-            String cognitoAppClientId = contextObject.get("cognito-app-client-id").toString();
+            String cognitoAppClientId = contextObject.get("cognito-identity-id").toString();
             String requestId = contextObject.get("request-id").toString();
 
-            logger.log("cognito-app-client-id: " + cognitoAppClientId);
+            logger.log("cognito-identity-id: " + cognitoAppClientId);
             logger.log("request-id: " + requestId);
 
-
+            String stepFunctionInputData = "{\"cognitoId\" : "+ cognitoAppClientId +","
+                    +  "\"requestId\":" + requestId
+                    +"}";
             //invoke step function
-            //invokeStepFunction();
+            AWSStepFunctionsAsyncClientBuilder
+                    .standard()
+                    .build().startExecution(
+                            new StartExecutionRequest()
+                                    .withStateMachineArn("arn:aws:states:us-east-1:576295803492:stateMachine:machine1")
+                                    .withInput(stepFunctionInputData)
+            );
+
             String jsonRequestString = "{\"request_id\" : \""+requestId+"\" , ";
             writer.write(gson.toJson(jsonRequestString));
             if (writer.checkError())
