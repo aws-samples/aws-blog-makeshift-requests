@@ -10,7 +10,7 @@ Resources:
   LambdaExecutionRole:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: "makeshift-aws-blog-iam-role"
+      RoleName: "makeshift-aws-blog-iam-role-api"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -32,7 +32,14 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${paramLambdaFunctionName}:*"
           PolicyName: "makeshift-aws-blog-iam-policy"
-
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "states:StartExecution"
+                Effect: "Allow"
+                Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:makeshift-demo-state-machine'
+          PolicyName: "makeshift-aws-blog-state-function-policy"
   #LambdaLogGroup:
   #    Type: "AWS::Logs::LogGroup"
   ##    Properties:
@@ -45,14 +52,17 @@ Resources:
     Properties:
       FunctionName: !Ref "paramLambdaFunctionName"
       Code:
-        S3Bucket: "skkodali-proserve"
-        S3Key: "makeshift-requests/cloudformations/target/makeshift-lambdas.jar"
+        S3Bucket: !Sub 'makeshift-demo-${AWS::Region}-${AWS::AccountId}'
+        S3Key: "makeshift-lambdas.jar"
       Description: "Invoke Step Functions."
       Handler: "com.dataanalytics.awsblogs.InvokeStepFunctionsLambda::handleRequest"
       MemorySize: 256
       Role: !GetAtt "LambdaExecutionRole.Arn"
       Runtime: "java8"
       Timeout: 300
+      Environment:
+        Variables:
+          StateMachineArn: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:makeshift-demo-state-machine'
 
 Outputs:
   StartAnalyticsJobLambdaArn:
@@ -71,4 +81,4 @@ Outputs:
     Description: "The Lambda execution role Arn"
     Value: !GetAtt LambdaExecutionRole.Arn
     Export:
-        Name: "LambdaExecutionRoleArn"
+        Name: "ApiLambdaExecutionRoleArn"

@@ -33,6 +33,7 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
         logger.log("EVENT: " + gson.toJson(event));
 
         String cognitoId = event.getCognitoId();
+        String requestId = event.getRequestId();
 
         String stepId = "";
         String stepStatus = "waiting";
@@ -40,17 +41,15 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
 
         try{
             AmazonElasticMapReduce emr = AmazonElasticMapReduceClientBuilder.defaultClient();
-
             ListClustersResult listClustersResult = emr.listClusters().withClusters(new ClusterSummary().withName(event.getRequestId()));
-
             clusterId = listClustersResult.getClusters().get(0).getId();
 
             DescribeClusterResult describeClusterResult = emr.describeCluster( new DescribeClusterRequest().withClusterId(clusterId));
 
             if( !describeClusterResult.getCluster().getStatus().getState().equalsIgnoreCase("terminated")
-                    && describeClusterResult.getCluster().getTags().isEmpty()){
+                    && describeClusterResult.getCluster().getTags().size() <= 1 ){
                 List<Tag> tags = new ArrayList<>();
-                tags.add(new Tag("Cost_Center_lambda",cognitoId));
+                tags.add(new Tag("Cost_Center",cognitoId));
                 emr.addTags(new AddTagsRequest(clusterId,tags ));
             }
 
@@ -61,7 +60,7 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
             }
 
         }catch (AmazonElasticMapReduceException e){
-            e.getStackTrace();
+            System.out.println(e.toString());
         }
 
         try{
@@ -69,7 +68,8 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
 
             DynamoDBMapper mapper = new DynamoDBMapper(client);
             JobStatusConfig item = new JobStatusConfig();
-            item.setJobID(cognitoId);
+            item.setJobID(requestId);
+            item.setCognitoID(cognitoId);
             item.setClusterID(clusterId);
             item.setStepID(stepId);
             item.setStepStatusState(stepStatus);
@@ -77,6 +77,7 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
         }
         catch (DynamoDBMappingException e){
             System.out.println(e.toString());
+            return "failed to update table";
         }
         return stepStatus;
     }

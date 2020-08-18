@@ -41,7 +41,7 @@ Resources:
     Type: "AWS::Cognito::UserPoolDomain"
     DependsOn: ApiUserPool
     Properties:
-      Domain: "myspringboot-apiuserpooldomain"
+      Domain: "makeshift-domain"
       UserPoolId: !Ref ApiUserPool
 
   ApiUserPoolResourceServer:

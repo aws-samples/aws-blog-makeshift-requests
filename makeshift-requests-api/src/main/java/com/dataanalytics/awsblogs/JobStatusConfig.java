@@ -5,13 +5,14 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 
-@DynamoDBTable(tableName = "JobStatus")
+@DynamoDBTable(tableName = "makeshift-jobstatus-table")
 public class JobStatusConfig {
 
     private String JobID;
     private String ClusterID;
     private String StepID;
     private String StepStatusState;
+    private String CognitoID;
 
     @DynamoDBHashKey(attributeName = "JobID")
     public String getJobID() {
@@ -44,4 +45,8 @@ public class JobStatusConfig {
     public void setStepStatusState(String stepStatusState) {
         StepStatusState = stepStatusState;
     }
+
+    @DynamoDBAttribute(attributeName = "CognitoID")
+    public String getCognitoID() { return CognitoID; }
+    public void setCognitoID(String cognitoID) { CognitoID = cognitoID; }
 }

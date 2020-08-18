@@ -5,6 +5,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsAsyncClientBuilder;
 import com.amazonaws.services.stepfunctions.builder.StateMachine;
 import com.amazonaws.services.stepfunctions.builder.StepFunctionBuilder;
@@ -45,10 +46,10 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
                     .standard()
                     .build().startExecution(
                             new StartExecutionRequest()
-                                    .withStateMachineArn("arn:aws:states:us-east-1:576295803492:stateMachine:machine1")
+                                    .withStateMachineArn(System.getenv("StateMachineArn"))
                                     .withInput(stepFunctionInputData)
             );
-
+           //"arn:aws:states:us-east-1:576295803492:stateMachine:machine1"
             String jsonRequestString = "{\"request_id\" : \""+requestId+"\" , ";
             writer.write(gson.toJson(jsonRequestString));
             if (writer.checkError())
@@ -67,7 +68,7 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
         }
     }
     private void invokeStepFunction() {
-        AWSStepFunctionsAsyncClientBuilder.standard()
+        AWSStepFunctions stepFunctions = AWSStepFunctionsAsyncClientBuilder.standard()
                 .withClientConfiguration(new ClientConfiguration())
                 .withRegion(Regions.US_EAST_1)
                 .build();
