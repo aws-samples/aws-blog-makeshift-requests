@@ -11,6 +11,8 @@ for S3_BUCKET in $S3_BUCKET_LIST; do
   # copy lambda jar file.
   aws s3 cp makeshift-lambdas/target/makeshift-lambdas.jar s3://$S3_BUCKET/makeshift-requests/lambdas/ --acl public-read
 
+  aws s3 cp example-spark-job/target/example-spark-job-1.0-SNAPSHOT.jar s3://$S3_BUCKET/makeshift-requests/lambdas/ --acl public-read
+
   # Copy cloudformations
   pushd cloudformations;
   aws s3 cp . s3://$S3_BUCKET/makeshift-requests/cloudformations/ --recursive --acl public-read --content-type 'text/x-yaml' #--profile $PROFILE

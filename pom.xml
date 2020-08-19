@@ -11,6 +11,7 @@
 
     <modules>
         <module>makeshift-requests-api</module>
+        <module>example-spark-job</module>
     </modules>
     
 </project>
