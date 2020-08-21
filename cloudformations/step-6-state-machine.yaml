@@ -76,8 +76,7 @@
                                       "cluster",
                                       "--class",
                                       "com.awsblogs.makeshift.requests.process.AccidentsByDaySparkJob",
-                                      `s3://${bucket}/scripts/${jarVersion}`,
-                                      `${requestId}`,
+                                      "s3://${EMRInputBucket}/example-spark-job-1.0-SNAPSHOT-jar-with-dependencies.jar"
                                   ]
                                 }
                               }
@@ -161,6 +160,7 @@
                 }
               }
             - EMRServiceRole: !Ref EMRServiceRole
+              EMRInputBucket: !ImportValue "MakeshiftDemoBucketName"
               EMREc2InstanceProfile: !Ref EMREc2InstanceProfile
               EMRLogS3Bucket: !Ref EMRLogS3Bucket
               EMRSubnetId: !ImportValue "makeshift-public-subnet-a"
