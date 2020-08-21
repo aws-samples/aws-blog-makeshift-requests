@@ -29,7 +29,10 @@ object AccidentsSparkJob {
 
     // Top 5 hours in every month when the accidents were more.
 
-    val inputDF = spark.read.json("s3://" + s3BucketName + "/monroe-county-crash-data2003-to-2015.csv").toDF()
+    //val inputDF = spark.read.json("s3://" + s3BucketName + "/monroe-county-crash-data2003-to-2015.csv").toDF()
+    val path = "s3://" + s3BucketName + "/" + "monroe-county-crash-data2003-to-2015.csv"
+    print(path)
+    val inputDF = spark.read.json(path).toDF()
     val byMonthDF = Window.partitionBy("Month").orderBy("incident_count")
     val countDF =  inputDF.groupBy("Month", "Hour").count()
                     .withColumnRenamed("count", "incident_count")
