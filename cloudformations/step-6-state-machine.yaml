@@ -43,7 +43,7 @@
                                     "InstanceFleetType": "MASTER",
                                     "TargetOnDemandCapacity": 1,
                                     "InstanceTypeConfigs": [{
-                                      "InstanceType": "m5.xlarge"
+                                      "InstanceType": "m5.large"
                                     }]
                                   },
                                   {
@@ -51,7 +51,7 @@
                                     "InstanceFleetType": "CORE",
                                     "TargetOnDemandCapacity": 1,
                                     "InstanceTypeConfigs": [{
-                                      "InstanceType": "m5.xlarge"
+                                      "InstanceType": "m5.large"
                                     }]
                                   }
                                 ]
@@ -220,6 +220,19 @@
                   Resource: !GetAtt EMRLogS3Bucket.Arn
               Version: 2012-10-17
             PolicyName: EMREc2RolePolicy
+          - PolicyDocument:
+             Statement:
+               - Action:
+                   - s3:*
+                 Effect: Allow
+                 Resource:
+                  - !ImportValue "MakeshiftDemoBucketArn"
+                  - Fn::Join:
+                      - ''
+                      - - !ImportValue "MakeshiftDemoBucketArn"
+                        - '/*'
+             Version: 2012-10-17
+            PolicyName: EMREc2RoleS3AccessPolicy
     EMRServiceRole:
       Type: AWS::IAM::Role
       Properties:
@@ -232,6 +245,20 @@
               Action: sts:AssumeRole
         ManagedPolicyArns:
           - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonElasticMapReduceRole
+        Policies:
+          - PolicyDocument:
+              Statement:
+                - Action:
+                    - s3:*
+                  Effect: Allow
+                  Resource:
+                   - !ImportValue "MakeshiftDemoBucketArn"
+                   - - Fn::Join:
+                         - ''
+                         - - !ImportValue "MakeshiftDemoBucketArn"
+                           - '/*'
+              Version: 2012-10-17
+            PolicyName: EMRServiceRoleS3AccessPolicy
     EMRLogS3Bucket:
       Type: AWS::S3::Bucket
       Properties:

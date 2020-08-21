@@ -24,7 +24,7 @@ object AccidentsSparkJob {
     val s3BucketName = args(0)
     val spark = SparkSession
       .builder()
-      .appName("AccidentsByDaySparkJob")
+      .appName("AccidentsSparkJob")
       .getOrCreate()
 
     // Top 5 hours in every month when the accidents were more.
