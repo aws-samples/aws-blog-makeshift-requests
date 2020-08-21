@@ -15,16 +15,13 @@ import org.apache.spark.sql.functions.rank
 object AccidentsSparkJob {
   def main(args: Array[String]) =
   {
-    if(args.length != 3)
+    if(args.length != 1)
     {
-      println("Requires 3 parameters")
-      println("Usage: <sourceBucket> <s3InputLocation> <s3OutputLocation>")
+      println("Requires 1 parameters")
+      println("Usage: <sourceBucket> ")
       System.exit(-1)
     }
     val s3BucketName = args(0)
-    val s3InputLocation = args(1)
-    val s3OutputLocation = args(2)
-
     val spark = SparkSession
       .builder()
       .appName("AccidentsByDaySparkJob")
@@ -32,8 +29,7 @@ object AccidentsSparkJob {
 
     // Top 5 hours in every month when the accidents were more.
 
-    // val inputDF = spark.read.json("s3://" + s3BucketName + "/" + s3InputLocation + "/").toDF()
-    val inputDF = spark.read.json( "s3://skkodali-proserve/makeshift-requests/input/monroe-county-crash-data2003-to-2015.csv").toDF()
+    val inputDF = spark.read.json("s3://" + s3BucketName + "/monroe-county-crash-data2003-to-2015.csv").toDF()
     val byMonthDF = Window.partitionBy("Month").orderBy("incident_count")
     val countDF =  inputDF.groupBy("Month", "Hour").count()
                     .withColumnRenamed("count", "incident_count")
@@ -41,6 +37,6 @@ object AccidentsSparkJob {
                     .filter("rank <= 5")
     countDF.write
       .mode("append")
-      .parquet("s3://" + s3BucketName + "/" + s3OutputLocation)
+      .parquet("s3://" + s3BucketName + "/output/" )
   }
 }
