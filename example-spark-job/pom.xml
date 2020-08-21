@@ -68,9 +68,8 @@
         <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
             <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.4.1</version>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
                 <executions>
                     <execution>
                         <goals>
@@ -80,11 +79,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <sourceDir>src/main/scala</sourceDir>
-                    <jvmArgs>
-                        <jvmArg>-Xms64m</jvmArg>
-                        <jvmArg>-Xmx1024m</jvmArg>
-                    </jvmArgs>
+                    <scalaVersion>2.11.8</scalaVersion>
                 </configuration>
             </plugin>
         </plugins>
