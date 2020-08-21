@@ -75,7 +75,7 @@ Resources:
                                   "--deploy-mode",
                                   "cluster",
                                   "--class",
-                                  "com.awsblogs.makeshift.requests.process.AccidentsByDaySparkJob",
+                                  "com.awsblogs.makeshift.requests.process.AccidentsSparkJob",
                                   "s3://${EMRInputBucket}/example-spark-job-1.0-SNAPSHOT-jar-with-dependencies.jar"
                               ]
                             }
