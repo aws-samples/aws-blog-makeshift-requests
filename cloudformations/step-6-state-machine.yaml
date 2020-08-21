@@ -67,10 +67,18 @@
                               "ClusterId.$": "$.EMR.ClusterId",
                               "Step": {
                                 "Name": "$.APIGatewayData.cognitoID",
-                                "ActionOnFailure": "CONTINUE",
+                                "ActionOnFailure": "TERMINATE_JOB_FLOW",
                                 "HadoopJarStep": {
                                   "Jar": "command-runner.jar",
-                                  "Args": ["spark-example", "SparkPi", "10"]
+                                  "Args": [
+                                    "spark-submit",
+                                      "--deploy-mode",
+                                      "cluster",
+                                      "--class",
+                                      "com.awsblogs.makeshift.requests.process.AccidentsByDaySparkJob",
+                                      `s3://${bucket}/scripts/${jarVersion}`,
+                                      `${requestId}`,
+                                  ]
                                 }
                               }
                             },
