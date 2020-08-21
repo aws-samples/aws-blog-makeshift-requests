@@ -84,7 +84,6 @@ public class GetStatusLambda implements RequestStreamHandler {
                     Map<String, AttributeValue> expressionAttributeValues =
                             new HashMap<String, AttributeValue>();
                     expressionAttributeValues.put(":val", new AttributeValue().withS(val));
-
                     Map<String, Condition> items_to_scan = new HashMap<>();
                     ScanRequest scanRequest = new ScanRequest()
                             .withTableName(ddbTableName)

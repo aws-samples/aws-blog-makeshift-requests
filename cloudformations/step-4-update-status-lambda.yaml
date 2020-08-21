@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Lambda function to check status for emr job and to update dynamodb."
+Parameters:
+  paramLambdaFunctionName:
+    Type: "String"
+    AllowedPattern: "^[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+$"
+    AllowedValues: ["makeshift-aws-blog-check-emr-status-lambda"]
+
+
+Resources:
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "makeshift-aws-blog-iam-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Effect: "Allow"
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${paramLambdaFunctionName}:*"
+          PolicyName: "makeshift-lambda-loggroup-iam-policy"
+
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "elasticmapreduce:DescribeStep"
+                  - "elasticmapreduce:ListSteps"
+                  - "elasticmapreduce:DescribeCluster"
+                  - "elasticmapreduce:AddTags"
+                  - "elasticmapreduce:ListClusters"
+                Effect: "Allow"
+                Resource:
+                  - "*"
+                Condition:
+                  ForAllValues:StringEquals:
+                    "elasticmapreduce:ResourceTag/created-by": makeshift-demo
+          PolicyName: "makeshift-lambda-emr-iam-policy"
+
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                Effect: "Allow"
+                Resource:
+                  Fn::ImportValue: "MakeshiftBlogDynamodbTableArn"
+                  #- !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/makeshift-jobstatus-table"
+          PolicyName: "makeshift-lambda-ddb-iam-policy"
+
+  UpdateStatusLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Ref "paramLambdaFunctionName"
+      Code:
+        #S3Bucket: !Sub 'makeshift-demo-${AWS::Region}-${AWS::AccountId}'
+        S3Bucket:
+            Fn::ImportValue: "MakeshiftDemoBucketName"
+        S3Key: "makeshift-lambdas.jar"
+      Description: "check status of EMR job."
+      Handler: "com.dataanalytics.awsblogs.UpdateStatusLambda::handleRequest"
+      MemorySize: 256
+      Role: !GetAtt "LambdaExecutionRole.Arn"
+      Runtime: "java8"
+      Timeout: 300
+
+Outputs:
+  UpdateStatusLambdaArn:
+    Description: "The check job status Lambda Arn"
+    Value: !GetAtt UpdateStatusLambda.Arn
+    Export:
+      Name: "UpdateStatusLambdaArn"
+
+  UpdateStatusLambdaName:
+    Description: "The check job status Lambda Name"
+    Value: !Ref UpdateStatusLambda
+    Export:
+      Name: "UpdateStatusLambdaName"
+
+  LambdaExecutionRoleArn:
+    Description: "The Lambda execution role Arn"
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+        Name: "UpdateStatusLambdaExecutionRoleArn"
