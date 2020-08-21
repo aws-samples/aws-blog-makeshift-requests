@@ -104,17 +104,17 @@ Outputs:
     Description: Public Subnet A.
     Value: !Ref 'PublicSubnetA'
     Export:
-      Name: "public-subnet-a"
+      Name: "makeshift-public-subnet-a"
   SubnetIDB:
     Description: Public Subnet B.
     Value: !Ref 'PublicSubnetB'
     Export:
-      Name: "public-subnet-b"
+      Name: "makeshift-public-subnet-b"
   SubnetIDC:
     Description: Public Subnet C.
     Value: !Ref 'PublicSubnetC'
     Export:
-      Name: "public-subnet-c"
+      Name: "makeshift-public-subnet-c"
   AdhocAccessSecurityGroup:
     Description: Use this security group ID for the these blog services.
     Value: !GetAtt 'AdhocAccessSecurityGroup.GroupId'

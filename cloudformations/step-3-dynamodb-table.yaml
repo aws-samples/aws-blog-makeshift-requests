@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  MakeshiftJobStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "JobID"
+          AttributeType: "S"
+
+      KeySchema:
+        -
+          AttributeName: "JobID"
+          KeyType: "HASH"
+
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: "makeshift-jobstatus-table"
+
+Outputs:
+  MakeshiftJobStatusTableOutput:
+    Description: "makeshift jobstatus dynamodb table"
+    Value: !GetAtt MakeshiftJobStatusTable.Arn
+    Export:
+      Name: "MakeshiftBlogDynamodbTableArn"
