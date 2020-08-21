@@ -107,6 +107,7 @@ Resources:
                         "Resource": "arn:aws:lambda:::function:makeshift-aws-blog-check-emr-status-lambda",
                         "Next": "Wait 60 Seconds",
                         "InputPath": "$",
+                        "ResultPath": "$.jobStatus",
                         "Retry": [{
                         "ErrorEquals": ["States.ALL"],
                         "IntervalSeconds": 1,
