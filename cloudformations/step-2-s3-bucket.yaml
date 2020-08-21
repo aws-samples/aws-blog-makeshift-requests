@@ -16,4 +16,9 @@ Outputs:
     Value: !Ref MakeshiftDemoBucket
     Export:
       Name: "MakeshiftDemoBucketName"
-    
+
+  MakeshiftDemoBucketArn:
+    Description: "makeshift s3 demo bucket ARN"
+    Value: !GetAtt MakeshiftDemoBucket.Arn
+    Export:
+      Name: "MakeshiftDemoBucketArn"
