@@ -18,6 +18,9 @@ import com.amazonaws.services.elasticmapreduce.model.Tag;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
+import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.ArrayList;
@@ -49,7 +52,7 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
             if( !describeClusterResult.getCluster().getStatus().getState().equalsIgnoreCase("terminated")
                     && describeClusterResult.getCluster().getTags().size() <= 1 ){
                 List<Tag> tags = new ArrayList<>();
-                tags.add(new Tag("Cost_Center",cognitoId));
+                tags.add(new Tag("Cost_Center",getParameter(cognitoId)));
                 emr.addTags(new AddTagsRequest(clusterId,tags ));
             }
 
@@ -80,5 +83,18 @@ public class UpdateStatusLambda implements RequestHandler<StepRequestData, Strin
             return "failed to update table";
         }
         return stepStatus;
+    }
+
+    /**
+     * Helper method to retrieve SSM Parameter's value
+     * @param parameterName identifier of the SSM Parameter
+     * @return decrypted parameter value
+     */
+    public static String getParameter(String parameterName) {
+        AWSSimpleSystemsManagement ssm = AWSSimpleSystemsManagementClientBuilder.defaultClient();
+        GetParameterRequest request = new GetParameterRequest();
+        request.setName(parameterName);
+        request.setWithDecryption(true);
+        return ssm.getParameter(request).getParameter().getValue();
     }
 }
