@@ -63,6 +63,9 @@ Resources:
       Name: !Ref ApiUserPoolClient
       Type: String
       Value: !Ref paramCognitoUserPoolName
+      Tags:
+        created-by: makeshift-demo
+
 
 Outputs:
   UserPoolName:
