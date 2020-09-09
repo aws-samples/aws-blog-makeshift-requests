@@ -5,12 +5,12 @@ Parameters:
     Type: String
     Description: Cognito User Name.
     Default: "my-makeshift-demo-pool"
-  paramResouceIdentifier:
+  paramResourceIdentifier:
     Type: String
     Description: Cognito User Name.
     Default: "myspringboot-ApiUserPoolResourceServer"
     AllowedValues: ["myspringboot-ApiUserPoolResourceServer"]
-  paramResouceScopeName:
+  paramResourceScopeName:
     Type: String
     Description: Cognito User Name.
     Default: "myspringboot-AdhocRequestsScope"
