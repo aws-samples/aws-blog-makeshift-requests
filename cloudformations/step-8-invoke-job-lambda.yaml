@@ -4,6 +4,7 @@ Parameters:
   paramLambdaFunctionName:
     Type: "String"
     AllowedPattern: "^[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+$"
+    Default: makeshift-aws-blog-invoke-step-functions-lambda
     AllowedValues: ["makeshift-aws-blog-invoke-step-functions-lambda"]
 
 Resources:

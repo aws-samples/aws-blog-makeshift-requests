@@ -62,6 +62,18 @@ Resources:
                   Fn::ImportValue: "MakeshiftBlogDynamodbTableArn"
                   #- !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/makeshift-jobstatus-table"
           PolicyName: "makeshift-lambda-ddb-iam-policy"
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "ssm:GetParameter"
+                Effect: "Allow"
+                Resource:
+                  - "*"
+                Condition:
+                  ForAllValues:StringEquals:
+                    "ssm:resourceTag/created-by": "makeshift-demo"
+          PolicyName: "makeshift-lambda-ssm-iam-policy"
 
   UpdateStatusLambda:
     Type: "AWS::Lambda::Function"

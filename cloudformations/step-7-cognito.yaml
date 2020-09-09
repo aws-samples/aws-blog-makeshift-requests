@@ -4,13 +4,16 @@ Parameters:
   paramCognitoUserPoolName:
     Type: String
     Description: Cognito User Name.
+    Default: "my-makeshift-demo-pool"
   paramResouceIdentifier:
     Type: String
     Description: Cognito User Name.
+    Default: "myspringboot-ApiUserPoolResourceServer"
     AllowedValues: ["myspringboot-ApiUserPoolResourceServer"]
   paramResouceScopeName:
     Type: String
     Description: Cognito User Name.
+    Default: "myspringboot-AdhocRequestsScope"
     AllowedValues: ["myspringboot-AdhocRequestsScope"]
 
 Resources:
@@ -41,7 +44,7 @@ Resources:
     Type: "AWS::Cognito::UserPoolDomain"
     DependsOn: ApiUserPool
     Properties:
-      Domain: "makeshift-domain"
+      Domain: !Sub "makeshift-domain-${AWS::AccountId}"
       UserPoolId: !Ref ApiUserPool
 
   ApiUserPoolResourceServer:
@@ -63,6 +66,9 @@ Resources:
       Name: !Ref ApiUserPoolClient
       Type: String
       Value: !Ref paramCognitoUserPoolName
+      Tags:
+        created-by: makeshift-demo
+
 
 Outputs:
   UserPoolName:
