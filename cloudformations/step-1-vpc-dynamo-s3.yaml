@@ -16,7 +16,7 @@ Resources:
     Properties:
       VpcId: !Ref 'VPC'
       CidrBlock: 10.0.1.0/24
-      MapPublicIpOnLaunch: 'True'
+      MapPublicIpOnLaunch: True
       Tags:
         - Key: Name
           Value: ADHOCVPCSubnetA
@@ -26,7 +26,7 @@ Resources:
     Properties:
       VpcId: !Ref 'VPC'
       CidrBlock: 10.0.2.0/24
-      MapPublicIpOnLaunch: 'True'
+      MapPublicIpOnLaunch: True
       Tags:
         - Key: Name
           Value: ADHOCVPCSubnetB
@@ -36,7 +36,7 @@ Resources:
     Properties:
       VpcId: !Ref 'VPC'
       CidrBlock: 10.0.3.0/24
-      MapPublicIpOnLaunch: 'True'
+      MapPublicIpOnLaunch: True
       Tags:
         - Key: Name
           Value: ADHOCVPCSubnetC
@@ -97,6 +97,33 @@ Resources:
       GroupId: !GetAtt 'VPC.DefaultSecurityGroup'
       IpProtocol: '-1'
       CidrIp: 10.0.0.0/16
+
+  MakeshiftJobStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "JobID"
+          AttributeType: "S"
+
+      KeySchema:
+        - AttributeName: "JobID"
+          KeyType: "HASH"
+
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: "makeshift-jobstatus-table"
+
+  MakeshiftDemoBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'makeshift-demo-${AWS::Region}-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    DeletionPolicy: Delete
+
 Outputs:
   StackName:
     Value: !Ref 'AWS::StackName'
@@ -125,3 +152,21 @@ Outputs:
     Value: !Ref 'VPC'
     Export:
       Name: "adhoc-vpc-id"
+
+  MakeshiftJobStatusTableOutput:
+    Description: "makeshift jobstatus dynamodb table"
+    Value: !GetAtt MakeshiftJobStatusTable.Arn
+    Export:
+      Name: "MakeshiftBlogDynamodbTableArn"
+
+  MakeshiftDemoBucketName:
+    Description: "makeshift s3 demo bucket"
+    Value: !Ref MakeshiftDemoBucket
+    Export:
+      Name: "MakeshiftDemoBucketName"
+
+  MakeshiftDemoBucketArn:
+    Description: "makeshift s3 demo bucket ARN"
+    Value: !GetAtt MakeshiftDemoBucket.Arn
+    Export:
+      Name: "MakeshiftDemoBucketArn"

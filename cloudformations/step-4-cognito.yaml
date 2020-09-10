@@ -27,7 +27,7 @@ Resources:
     DependsOn: ApiUserPoolResourceServer
     Properties:
       ClientName: "myspringboot-ApiUserPoolClient"
-      RefreshTokenValidity: "3650"
+      RefreshTokenValidity: 3650
       GenerateSecret: true
       ExplicitAuthFlows:
         - ALLOW_CUSTOM_AUTH
@@ -44,18 +44,22 @@ Resources:
     Type: "AWS::Cognito::UserPoolDomain"
     DependsOn: ApiUserPool
     Properties:
-      Domain: !Sub "makeshift-domain-${AWS::AccountId}"
+      Domain:
+        !Join
+          - ''
+          - - 'makeshift-domain-'
+            - !Select [1, !Split ["-", !ImportValue adhoc-securitygroup-id]]
       UserPoolId: !Ref ApiUserPool
 
   ApiUserPoolResourceServer:
       Type: "AWS::Cognito::UserPoolResourceServer"
       DependsOn: ApiUserPoolDomain
       Properties:
-        Identifier: !Ref paramResouceIdentifier
+        Identifier: !Ref paramResourceIdentifier
         Name: "myspringboot-ApiUserPoolResourceServer"
         UserPoolId: !Ref ApiUserPool
         Scopes:
-          - ScopeName: !Ref paramResouceScopeName
+          - ScopeName: !Ref paramResourceScopeName
             ScopeDescription: "myspringboot-AdhocRequestsScope"
 
   UserPoolParameterStore:
@@ -106,9 +110,8 @@ Outputs:
     Value:
       Fn::Join:
           - ''
-          - - Ref: paramResouceIdentifier
+          - - Ref: paramResourceIdentifier
             - '/'
-            - Ref: paramResouceScopeName
+            - Ref: paramResourceScopeName
     Export:
       Name: "Cognito-resouce-identifier-scope"
-
