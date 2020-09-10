@@ -239,9 +239,11 @@ Resources:
             - "getJobStatus"
 
 Outputs:
-  ApiGatewayExecutionRole:
-    Description: The node instance role
-    Value: !GetAtt ApiGatewayExecutionRole.Arn
+  StartAnalyticsJobInvokeURL:
+    Value: !Sub "https://${MakeShiftApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${StartAnalyticsJobApiStage}"
     Export:
-      #Name: !Sub "${AWS::StackName}-EKSClusterRole"
-      Name: "ApiGatewayExecutionRole"
+      Name: "StartAnalyticsJobInvokeURL"
+  GetJobStatusInvokeURL:
+    Value: !Sub "https://${MakeShiftApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${GetJobStatusApiStage}"
+    Export:
+      Name: "GetJobStatusInvokeURL"
