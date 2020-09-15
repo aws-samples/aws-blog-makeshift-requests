@@ -41,6 +41,18 @@ Resources:
                 Effect: "Allow"
                 Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:makeshift-demo-state-machine'
           PolicyName: "makeshift-aws-blog-state-function-policy"
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "ssm:GetParameter"
+                Effect: "Allow"
+                Resource:
+                  - "*"
+                Condition:
+                  ForAllValues:StringEquals:
+                    "ssm:resourceTag/created-by": "makeshift-demo"
+          PolicyName: "makeshift-lambda-ssm-iam-policy"
   #LambdaLogGroup:
   #    Type: "AWS::Logs::LogGroup"
   ##    Properties:

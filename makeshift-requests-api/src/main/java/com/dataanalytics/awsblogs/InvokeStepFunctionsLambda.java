@@ -5,6 +5,9 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
+import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsAsyncClientBuilder;
 import com.amazonaws.services.stepfunctions.builder.StateMachine;
@@ -40,7 +43,10 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
 
             String stepFunctionInputData = "{\"cognitoId\" : "+ cognitoAppClientId +","
                     +  "\"requestId\":" + requestId
+                    +  "\"tagCreatedBy\":" + "{\"Key\": \"create-by\", \"Value\" : \"makeshift-demo\"}"
+                    +  "\"tagCostCenter\":" + "{\"Key\": \"cost-center\", \"Value\" : \"" + getParameter(cognitoAppClientId) + "\"}"
                     +"}";
+
             //invoke step function
             AWSStepFunctionsAsyncClientBuilder
                     .standard()
@@ -49,7 +55,6 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
                                     .withStateMachineArn(System.getenv("StateMachineArn"))
                                     .withInput(stepFunctionInputData)
             );
-           //"arn:aws:states:us-east-1:576295803492:stateMachine:machine1"
             String jsonRequestString = "{\"request_id\" : \""+requestId+"\" , ";
             writer.write(gson.toJson(jsonRequestString));
             if (writer.checkError())
@@ -67,10 +72,16 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
             writer.close();
         }
     }
-    private void invokeStepFunction() {
-        AWSStepFunctions stepFunctions = AWSStepFunctionsAsyncClientBuilder.standard()
-                .withClientConfiguration(new ClientConfiguration())
-                .withRegion(Regions.US_EAST_1)
-                .build();
+    /**
+     * Helper method to retrieve SSM Parameter's value
+     * @param parameterName identifier of the SSM Parameter
+     * @return decrypted parameter value
+     */
+    public static String getParameter(String parameterName) {
+        AWSSimpleSystemsManagement ssm = AWSSimpleSystemsManagementClientBuilder.defaultClient();
+        GetParameterRequest request = new GetParameterRequest();
+        request.setName(parameterName);
+        request.setWithDecryption(true);
+        return ssm.getParameter(request).getParameter().getValue();
     }
 }
