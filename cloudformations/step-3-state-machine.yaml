@@ -19,16 +19,31 @@ Resources:
                 "Type": "Parallel",
                 "End": true,
                 "Branches": [{
-                    "StartAt": "Create an EMR cluster",
+                    "StartAt": "Pre-Process",
                     "States": {
+                      "Pre-Process": {
+                              "Type": "Pass",
+                              "Parameters": {
+                                  "FormattedInputsToEmr": {
+                                      "Name.$": "$.requestId",
+                                      "Tags": [
+                                          {
+                                               "Arg0.$" :  "States.StringToJson($.tagCreatedBy)",
+                                               "Arg1.$" :  "States.StringToJson($.tagCostCenter)"
+                                          }
+                                      ]
+                                  }
+                              },
+                              "Next": "Create an EMR cluster"
+                          },
                       "Create an EMR cluster": {
                         "Type": "Task",
                         "Resource": "arn:aws:states:::elasticmapreduce:createCluster.sync",
                         "Parameters": {
-                          "Name.$": "$.requestId",
+                          "Name.$": "$.FormattedInputsToEmr.Name",
                           "VisibleToAllUsers": true,
                           "ReleaseLabel": "emr-5.26.0",
-                          "Tags":[{"Key":"created-by","Value":"makeshift-demo"}],
+                          "Tags.$": "$.FormattedInputsToEmr.Tags[*][*]",
                           "Applications": [{
                             "Name": "Spark"
                           }],
