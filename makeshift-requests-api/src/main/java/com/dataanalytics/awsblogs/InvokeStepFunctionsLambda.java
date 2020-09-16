@@ -55,7 +55,7 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
                                     .withStateMachineArn(System.getenv("StateMachineArn"))
                                     .withInput(stepFunctionInputData)
             );
-            String jsonRequestString = "{request_id :"+requestId+"}";
+            String jsonRequestString = "{request_id :"+requestId.replace("\"", "")+"}";
             writer.write(gson.toJson(jsonRequestString));
             if (writer.checkError())
             {
