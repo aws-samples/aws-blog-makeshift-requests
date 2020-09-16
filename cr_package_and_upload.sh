@@ -1,28 +1,27 @@
 #!/usr/bin/env bash
-S3_BUCKET_1="skkodali-proserve"
 
 export JAVA_HOME=$(/usr/libexec/java_home)
 mvn clean package
-S3_BUCKET_LIST="skkodali-proserve"
-S3_BUCKET_1="skkodali-proserve"
+S3_BUCKET_LIST=("aws-bigdata-blog")
 pwd
 for S3_BUCKET in $S3_BUCKET_LIST; do
 
   # copy lambda jar file.
-  aws s3 cp makeshift-lambdas/target/makeshift-lambdas.jar s3://$S3_BUCKET/makeshift-requests/lambdas/ --acl public-read
+  aws s3 cp makeshift-lambdas/target/makeshift-lambdas.jar s3://$S3_BUCKET/artifacts/awsblog-makeshift/jars/ --acl public-read
 
-  aws s3 cp example-spark-job/target/example-spark-job-1.0-SNAPSHOT.jar s3://$S3_BUCKET/makeshift-requests/lambdas/ --acl public-read
+  aws s3 cp example-spark-job/target/example-spark-job-1.0-SNAPSHOT-jar-with-dependencies.jar s3://$S3_BUCKET/artifacts/awsblog-makeshift/jars/ --acl public-read
 
   # Copy cloudformations
   pushd cloudformations;
-  aws s3 cp . s3://$S3_BUCKET/makeshift-requests/cloudformations/ --recursive --acl public-read --content-type 'text/x-yaml' #--profile $PROFILE
+  aws s3 cp . s3://$S3_BUCKET/artifacts/awsblog-makeshift/cloudformations/ --recursive --acl public-read --content-type 'text/x-yaml' #--profile $PROFILE
   popd
+
+  aws s3 cp monroe-county-crash-data2003-to-2015.csv s3://$S3_BUCKET/artifacts/awsblog-makeshift/sample-dataset/ --acl public-read
 
 done
 
 
 ## Update lambda code.
-aws lambda update-function-code --function-name makeshift-aws-blog-invoke-step-functions-lambda --zip-file fileb:///Users/skkodali/work/Blogs-And-Artifacts/adhoc-requests-api/makeshift-lambdas/target/makeshift-lambdas.jar
 
 STACK_NAME=cf-makeshift-lambda
 : '
