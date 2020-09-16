@@ -42,8 +42,8 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
             logger.log("request-id: " + requestId);
 
             String stepFunctionInputData = "{\"cognitoId\" : "+ cognitoAppClientId +","
-                    +  "\"requestId\":" + requestId
-                    +  "\"tagCreatedBy\":" + "{\"Key\": \"create-by\", \"Value\" : \"makeshift-demo\"}"
+                    +  "\"requestId\":" + requestId +","
+                    +  "\"tagCreatedBy\":" + "{\"Key\" : \"create-by\", \"Value\" : \"makeshift-demo\"}" + ","
                     +  "\"tagCostCenter\":" + "{\"Key\": \"cost-center\", \"Value\" : \"" + getParameter(cognitoAppClientId) + "\"}"
                     +"}";
 
@@ -55,7 +55,7 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
                                     .withStateMachineArn(System.getenv("StateMachineArn"))
                                     .withInput(stepFunctionInputData)
             );
-            String jsonRequestString = "{\"request_id\" : \""+requestId+"\" , ";
+            String jsonRequestString = "{request_id :"+requestId+"}";
             writer.write(gson.toJson(jsonRequestString));
             if (writer.checkError())
             {
@@ -80,7 +80,7 @@ public class InvokeStepFunctionsLambda implements RequestStreamHandler {
     public static String getParameter(String parameterName) {
         AWSSimpleSystemsManagement ssm = AWSSimpleSystemsManagementClientBuilder.defaultClient();
         GetParameterRequest request = new GetParameterRequest();
-        request.setName(parameterName);
+        request.setName(parameterName.replace("\"", ""));
         request.setWithDecryption(true);
         return ssm.getParameter(request).getParameter().getValue();
     }

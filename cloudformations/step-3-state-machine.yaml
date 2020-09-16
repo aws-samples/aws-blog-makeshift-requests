@@ -28,8 +28,8 @@ Resources:
                                       "Name.$": "$.requestId",
                                       "Tags": [
                                           {
-                                               "Arg0.$" :  "States.StringToJson($.tagCreatedBy)",
-                                               "Arg1.$" :  "States.StringToJson($.tagCostCenter)"
+                                               "Arg0.$" :  "$.tagCreatedBy",
+                                               "Arg1.$" :  "$.tagCostCenter"
                                           }
                                       ]
                                   }
